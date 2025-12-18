@@ -9,20 +9,22 @@ struct ExecutionLog: Identifiable {
     let isSuccess: Bool
 }
 
-class LogStore: ObservableObject {
-    @Published var logs: [ExecutionLog] = []
-    @Published var isPaused: Bool = false
+import Observation
+
+@MainActor
+@Observable
+class LogStore {
+    var logs: [ExecutionLog] = []
+    var isPaused: Bool = false
     
     func addLog(_ log: ExecutionLog) {
         // If paused, do not add new logs to the view.
         // We drop them to keep the view static as requested by "hard to check logs"
         guard !isPaused else { return }
         
-        DispatchQueue.main.async {
-            self.logs.insert(log, at: 0)
-            if self.logs.count > 100 {
-                self.logs.removeLast()
-            }
+        self.logs.insert(log, at: 0)
+        if self.logs.count > 100 {
+            self.logs.removeLast()
         }
     }
     

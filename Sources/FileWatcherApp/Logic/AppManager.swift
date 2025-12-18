@@ -1,15 +1,17 @@
 import Foundation
-import Combine
+import Observation
 import SwiftUI
 
-class AppManager: ObservableObject {
+@MainActor
+@Observable
+class AppManager {
     let configStore: ConfigStore
     let logStore: LogStore
     
     // Private watcher instance to ensure it's managed only here
     private var watcher: FileWatcher?
     
-    @Published var showPermissionAlert = false
+    var showPermissionAlert = false
     
     init() {
         // Initialize Stores
@@ -39,9 +41,7 @@ class AppManager: ObservableObject {
     
     func checkPermissions() {
         if !PermissionManager.shared.hasAccess(to: configStore.resolvedWatchedPath) {
-            DispatchQueue.main.async {
-                self.showPermissionAlert = true
-            }
+            self.showPermissionAlert = true
         }
     }
     

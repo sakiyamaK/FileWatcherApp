@@ -2,7 +2,7 @@ import Foundation
 import CoreServices
 import Combine
 
-class FileWatcher: ObservableObject {
+class FileWatcher: @unchecked Sendable {
     private var stream: FSEventStreamRef?
     private var configStore: ConfigStore
     private var logStore: LogStore
@@ -11,24 +11,18 @@ class FileWatcher: ObservableObject {
     // Serial queue for event processing
     private let queue = DispatchQueue(label: "com.filewatcher.fsevents")
     
+    @MainActor
     init(configStore: ConfigStore, logStore: LogStore) {
         self.configStore = configStore
         self.logStore = logStore
         
         // Subscribe to config changes to restart watcher
-        configStore.$resolvedWatchedPath
+        // Using the manual subject we added since @Observable doesn't stream changes
+        configStore.configChangedSubject
             .receive(on: DispatchQueue.main)
             .sink { [weak self] _ in
-                print("Config path changed, restarting watcher...")
+                print("Config changed, restarting watcher...")
                 self?.start()
-            }
-            .store(in: &cancellables)
-            
-        configStore.$currentConfig
-            .receive(on: DispatchQueue.main)
-            .sink { [weak self] _ in
-               print("Config object changed, restarting watcher...")
-               self?.start()
             }
             .store(in: &cancellables)
             
@@ -39,14 +33,27 @@ class FileWatcher: ObservableObject {
         stop()
     }
     
+    // Thread-safe local copy of config for logic on 'queue'
+    private var activeConfig: AppConfig?
+    private var activePath: String = ""
+
+    @MainActor
     func start() {
         stop()
         
+        // Access MainActor properties on Main thread (start is called from Main)
         guard let config = configStore.currentConfig else {
             print("FileWatcher start failed: No current config")
             return
         }
         let path = configStore.resolvedWatchedPath
+        
+        // Update the active config on the queue that uses it to ensure visibility and no races
+        queue.async { [weak self] in
+            self?.activeConfig = config
+            self?.activePath = path
+        }
+
         if path.isEmpty || path == "/" {
              // Fallback or safety check? user might want to watch root, but uncommon.
              // If config hasn't loaded path logic yet.
@@ -115,8 +122,9 @@ class FileWatcher: ObservableObject {
     
     // Internal method called by the C-function callback
     fileprivate func handleEvents(paths: [String], flags: [FSEventStreamEventFlags]) {
-        guard let config = configStore.currentConfig else { return }
-        let rootPath = configStore.resolvedWatchedPath
+        // Use local activeConfig which is thread-safe on this queue
+        guard let config = self.activeConfig else { return }
+        let rootPath = self.activePath
         
         // Deduplicate paths in this batch and standardize keys
         var uniquePathsInv = [String: String]() // StandardizedLower -> Original
@@ -166,16 +174,12 @@ class FileWatcher: ObservableObject {
             }
             
             // Check watchers
-            var executed = false
             for watcher in config.watchers {
                 for pattern in watcher.patterns {
                     // Match pattern (suffix check)
                     if url.lastPathComponent.hasSuffix(pattern) {
                          // Double check existence before deciding to run
                          if !FileManager.default.fileExists(atPath: originalPath) { continue }
-                         
-                         // Mark as executed immediately to prevent race in serial queue for next item
-                         executed = true
                         
                          // Update time immediately (Lock) using standard key
                          lastExecutionTimes[standardPathKey] = now
@@ -183,7 +187,7 @@ class FileWatcher: ObservableObject {
                          print("Locked file for execution: \(url.lastPathComponent)")
                          
                          let capturedKey = standardPathKey
-
+ 
                         // Execute Async to not block the FSEvents queue
                         DispatchQueue.global(qos: .userInitiated).async { [weak self] in
                             self?.execute(watcher: watcher, file: url) {
@@ -215,8 +219,8 @@ class FileWatcher: ObservableObject {
             output: output,
             isSuccess: success
         )
-        // LogStore is MainActor usually, or needs main thread
-        DispatchQueue.main.async { [weak self] in
+        // LogStore is MainActor, so we MUST await it on MainActor
+        Task { @MainActor [weak self] in
             self?.logStore.addLog(log)
         }
         

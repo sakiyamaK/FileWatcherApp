@@ -1,8 +1,8 @@
 import SwiftUI
 
 struct ContentView: View {
-    @EnvironmentObject var configStore: ConfigStore
-    @EnvironmentObject var logStore: LogStore
+    @Environment(ConfigStore.self) var configStore
+    @Environment(LogStore.self) var logStore
     @State private var showFileImporter = false
 
     var body: some View {

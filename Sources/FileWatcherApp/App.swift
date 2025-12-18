@@ -3,8 +3,8 @@ import SwiftUI
 @main
 struct FileWatcherApp: App {
     @Environment(\.openWindow) var openWindow
-    // Single source of truth
-    @StateObject private var appManager = AppManager()
+    // Single source of truth using Observation
+    @State private var appManager = AppManager()
 
     init() {
         let stderr = FileHandle.standardError
@@ -16,8 +16,8 @@ struct FileWatcherApp: App {
         #if os(macOS)
         WindowGroup(id: "mainWindow") {
             ContentView()
-                .environmentObject(appManager.configStore)
-                .environmentObject(appManager.logStore)
+                .environment(appManager.configStore)
+                .environment(appManager.logStore)
                 .onAppear {
                     appManager.startApp()
                 }
