@@ -1,0 +1,15 @@
+config:
+  debounce_delay: 1.0
+  ignore_dirs:
+    - .git
+    - .build
+    - DerivedData
+    - Pods
+    - Carthage
+    - .swiftpm
+
+watchers:
+  - name: "SwiftLint"
+    patterns:
+      - ".swift"
+    command: "mint run swiftlint --fix $FILE"
