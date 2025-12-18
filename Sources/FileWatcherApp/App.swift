@@ -27,7 +27,7 @@ struct FileWatcherApp: App {
         }
         .windowResizability(.contentSize)
 
-        MenuBarExtra("FileWatcher", image: "AppIcon") {
+        MenuBarExtra("FileWatcher", systemImage: "eye") {
             Text("Scanning: \(truncatedPath(appManager.configStore.resolvedWatchedPath))")
             Divider()
             Button("Settings") {
