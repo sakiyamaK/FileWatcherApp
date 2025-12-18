@@ -96,4 +96,10 @@ EOF
 echo "Signing app..."
 codesign --force --deep --sign - "${APP_BUNDLE}"
 
+# Create Release ZIP
+RELEASE_ZIP="${OUTPUT_DIR}/${BUNDLE_NAME}.zip"
+echo "Creating release zip at ${RELEASE_ZIP}..."
+ditto -c -k --sequesterRsrc --keepParent "${APP_BUNDLE}" "${RELEASE_ZIP}"
+
 echo "Done! App built at ${APP_BUNDLE}"
+echo "Release ZIP available at ${RELEASE_ZIP}"
