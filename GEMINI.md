@@ -1,6 +1,6 @@
 # FileWatcher.app
 
-**FileWatcher.app** is a high-performance macOS menu bar application tailored for automating local development workflows. It monitors specified directories for file changes using native filesystem events and executes defined shell commands.
+**FileWatcher.app** is a high-performance macOS menu bar application (macOS 14.0+) tailored for automating local development workflows. It monitors specified directories for file changes using native filesystem events and executes defined shell commands.
 
 ## Core Architecture
 
@@ -10,9 +10,10 @@ The application follows a clean separation of concerns:
 -   **Views**: SwiftUI-based UI (`ContentView`) for configuration management and status visualization.
 -   **Logic**:
     -   **AppManager (Singleton)**: Central controller ensuring a single instance of the application logic exists.
-    -   **FileWatcher**: Wraps the macOS `FSEvents` C-API for efficient, zero-polling file monitoring. Uses `DispatchQueue` and `Combine` for reactive event handling.
+    -   **FileWatcher**: Wraps the macOS `FSEvents` C-API for efficient, zero-polling file monitoring. Uses `DispatchQueue` and a serial queue for state management, marked as `@unchecked Sendable`.
     -   **CommandRunner**: Executes shell commands asynchronously.
-    -   **Stores**: `ConfigStore` and `LogStore` manage state and persistence.
+    -   **Stores**: `ConfigStore` and `LogStore` manage state and persistence using the Swift Observation framework (`@Observable`).
+    -   **Concurrency**: Uses `@MainActor` for UI-bound state and `Task` for bridging background events to the main thread.
 
 ## Key Technical Features
 
@@ -48,7 +49,9 @@ The project uses Swift Package Manager (SPM).
 ./scripts/build_app.sh
 ```
 
-**Output**: `build/FileWatcher.app`
+**Output**: 
+- `build/FileWatcher.app`
+- `build/FileWatcher.zip` (Signed and ready for distribution)
 
 ## Permissions
 

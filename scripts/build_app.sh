@@ -77,7 +77,7 @@ cat > "${INFO_PLIST}" <<EOF
     <key>CFBundleVersion</key>
     <string>1</string>
     <key>LSUIElement</key>
-    <false/>
+    <true/>
     <key>NSHighResolutionCapable</key>
     <true/>
     <key>NSDesktopFolderUsageDescription</key>

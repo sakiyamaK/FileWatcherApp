@@ -11,6 +11,11 @@ A high-performance macOS file watcher that automates command execution on file c
 
 ## Installation
 
+### Option A: Download Release
+1. Download `FileWatcher.zip` from the [Releases](https://github.com/sakiyamaK/FileWatcherApp/releases) page.
+2. Extract and move `FileWatcher.app` to your Applications folder.
+
+### Option B: Build from Source
 1.  Clone and build:
     ```bash
     ./scripts/build_app.sh
@@ -44,8 +49,7 @@ watchers:
 ```
 
 ## Setup
-
-1. Launch `FileWatcher.app`.
-2. Click the Menu Bar icon → **Open Window**.
+1. Launch `FileWatcher.app`. It will appear in your Menu Bar (eye icon).
+2. Click the Menu Bar icon → **Settings**.
 3. Load your `.yml` config file.
 4. **Permissions**: Ensure the app has "Full Disk Access" if watching protected directories.
