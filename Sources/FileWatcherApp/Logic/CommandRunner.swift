@@ -12,8 +12,15 @@ class CommandRunner {
         
         process.standardOutput = pipe
         process.standardError = pipe
-        process.arguments = ["-c", expandedCommand]
-        process.launchPath = "/bin/zsh" // Or /bin/bash
+        process.arguments = ["-l", "-c", expandedCommand]
+        process.launchPath = "/bin/zsh"
+        
+        // Ensure PATH includes common homebrew locations
+        var env = ProcessInfo.processInfo.environment
+        let extraPaths = ["/opt/homebrew/bin", "/usr/local/bin"]
+        let currentPath = env["PATH"] ?? ""
+        env["PATH"] = (extraPaths + [currentPath]).joined(separator: ":")
+        process.environment = env
         
         do {
             try process.run()
