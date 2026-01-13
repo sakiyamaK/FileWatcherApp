@@ -211,7 +211,8 @@ class FileWatcher: @unchecked Sendable {
     // Add completion handler
     private func execute(watcher: WatcherConfig, file: URL, completion: @escaping () -> Void) {
         print("Executing \(watcher.name) for \(file.lastPathComponent)")
-        let (output, success) = CommandRunner.run(command: watcher.command, file: file.path)
+        let shell = activeConfig?.config.shell
+        let (output, success) = CommandRunner.run(command: watcher.command, file: file.path, shell: shell)
         
         let log = ExecutionLog(
             command: watcher.command,

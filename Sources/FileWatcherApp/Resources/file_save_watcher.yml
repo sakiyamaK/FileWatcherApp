@@ -1,5 +1,6 @@
 config:
   debounce_delay: 1.0
+  shell: /bin/zsh
   ignore_dirs:
     - .git
     - .build

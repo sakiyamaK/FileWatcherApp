@@ -1,7 +1,7 @@
 import Foundation
 
 class CommandRunner {
-    static func run(command: String, file: String) -> (output: String, success: Bool) {
+    static func run(command: String, file: String, shell: String? = nil) -> (output: String, success: Bool) {
         let process = Process()
         let pipe = Pipe()
         
@@ -13,7 +13,7 @@ class CommandRunner {
         process.standardOutput = pipe
         process.standardError = pipe
         process.arguments = ["-l", "-c", expandedCommand]
-        process.launchPath = "/bin/zsh"
+        process.launchPath = shell ?? "/bin/zsh"
         
         // Ensure PATH includes common homebrew locations
         var env = ProcessInfo.processInfo.environment

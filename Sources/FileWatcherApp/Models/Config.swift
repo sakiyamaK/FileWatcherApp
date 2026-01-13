@@ -8,6 +8,7 @@ struct AppConfig: Codable {
 struct GlobalConfig: Codable {
     var debounce_delay: Double
     var ignore_dirs: [String]
+    var shell: String?
     var path: String? // User mentioned path might be specified
 }
 
